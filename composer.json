@@ -1,0 +1,77 @@
+{
+    "name": "arzcode/shared-secrets",
+    "description": "Share passwords and secrets from your Filament panel through self-destructing signed links.",
+    "keywords": [
+        "filament",
+        "filamentphp",
+        "laravel",
+        "livewire",
+        "secrets",
+        "passwords",
+        "one-time-link"
+    ],
+    "homepage": "https://github.com/buzkall/shared-secrets",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Alicia",
+            "email": "alicia@arzcode.com",
+            "role": "Developer"
+        }
+    ],
+    "support": {
+        "issues": "https://github.com/buzkall/shared-secrets/issues",
+        "source": "https://github.com/buzkall/shared-secrets"
+    },
+    "require": {
+        "php": "^8.4",
+        "filament/filament": "^5.8",
+        "illuminate/contracts": "^12.0|^13.0",
+        "spatie/laravel-package-tools": "^1.16"
+    },
+    "require-dev": {
+        "driftingly/rector-laravel": "^2.6",
+        "larastan/larastan": "^3.0",
+        "laravel/pint": "^1.18",
+        "orchestra/testbench": "^10.0|^11.0",
+        "pestphp/pest": "^4.0|^5.0",
+        "pestphp/pest-plugin-laravel": "^4.0|^5.0",
+        "pestphp/pest-plugin-livewire": "^4.0|^5.0",
+        "rector/rector": "^2.6"
+    },
+    "autoload": {
+        "psr-4": {
+            "Arzcode\\SharedSecrets\\": "src/",
+            "Arzcode\\SharedSecrets\\Database\\Factories\\": "database/factories/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Arzcode\\SharedSecrets\\Tests\\": "tests/",
+            "Workbench\\Database\\Seeders\\": "workbench/database/seeders/"
+        }
+    },
+    "scripts": {
+        "analyse": "vendor/bin/phpstan analyse",
+        "test": "vendor/bin/pest",
+        "format": "vendor/bin/pint",
+        "workbench:serve": "@php vendor/bin/testbench serve",
+        "refactor": "vendor/bin/rector process",
+        "refactor:check": "vendor/bin/rector process --dry-run"
+    },
+    "config": {
+        "sort-packages": true,
+        "allow-plugins": {
+            "pestphp/pest-plugin": true
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Arzcode\\SharedSecrets\\SharedSecretsServiceProvider"
+            ]
+        }
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}
