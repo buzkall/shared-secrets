@@ -1,3 +1,5 @@
+![Shared Secrets: self-destructing secret links for Filament](art/banner.png)
+
 # Shared Secrets
 
 Share passwords and secrets from your Filament panel through self-destructing signed links, in the spirit of
@@ -6,6 +8,27 @@ Share passwords and secrets from your Filament panel through self-destructing si
 A panel user pastes a secret, picks how long it lives and how many times it can be viewed, and gets a signed link.
 The content is encrypted at rest and wiped as soon as it expires, runs out of views, is revoked or is deleted by its
 reader. A secret can also be targeted at a user of the site, who is notified and must log in to open it.
+
+![The shared secrets page: a form to push a secret and the list of the secrets you sent](docs/screenshots/manage-secrets.png)
+
+## Screenshots
+
+After pushing a secret, its link is shown in place, ready to copy:
+
+![The generated link with a copy button](docs/screenshots/link-ready.png)
+
+The reader opens the link and confirms before a view is spent:
+
+![The reader page asking to reveal the secret](docs/screenshots/reveal-confirm.png)
+
+A secret can require a passphrase:
+
+![The reader page asking for a passphrase](docs/screenshots/reveal-passphrase.png)
+
+Once revealed, the reader can copy the secret, sees how many views are left and, when the sender allows it, can delete
+it straight away:
+
+![The revealed secret with a copy button and a delete button](docs/screenshots/reveal-secret.png)
 
 ## Requirements
 
