@@ -2,7 +2,19 @@
 
 All notable changes to `arzcode/shared-secrets` are documented here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project adheres to [Semantic Versioning](https://semver.org/).
 
-## [Unreleased]
+## [1.0.2] - 2026-10-08
+
+### Fixed
+
+- The published migration passes PHPStan at level 10 in the host: it checks that the configured user model is an Eloquent model and reads the table names with `config()->string()`, so nothing in it is `mixed`. It still uses no class from the package.
+
+## [1.0.1] - 2026-10-08
+
+### Fixed
+
+- `shared-secrets:prune` no longer fails with a `TypeError` in a host that uses immutable dates (`Date::use(CarbonImmutable::class)`).
+
+## [1.0.0] - 2026-10-03
 
 ### Added
 
@@ -15,10 +27,6 @@ All notable changes to `arzcode/shared-secrets` are documented here. The format 
 - `shared-secrets:install` and `shared-secrets:uninstall` commands. The installer asks, panel by panel, whether to register the plugin.
 - Plugin options: `navigationGroup()`, `navigationSort()`, `navigationIcon()`, `authorize()`, `viewAllSecrets()`, `recipients()`, `recipientQuery()`, `revealPath()` and `revealLogoHeight()`.
 - English, Spanish and Catalan translations.
-
-### Fixed
-
-- `shared-secrets:prune` no longer fails with a `TypeError` in a host that uses immutable dates (`Date::use(CarbonImmutable::class)`).
 
 ### Security
 

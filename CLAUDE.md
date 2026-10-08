@@ -105,7 +105,7 @@ Each of these has a test that fails if the rule is removed. Do not weaken one wi
 
 ## Writing code for PHPStan level 10
 
-`phpstan.neon` runs Larastan at level 10 over `src`, `config` and `database`. Write code that passes on the first run:
+`phpstan.neon` runs Larastan at level 10 over `src`, `config` and `database`, migration stub included (`fileExtensions` lists `stub`): a host that analyses its `database` folder inherits the published file, so it must be clean there too. The stub uses no class from the package, because a published migration can outlive it. Write code that passes on the first run:
 
 - Every array parameter, property and return type gets a PHPDoc type; closures get typed parameters and return types.
 - Values that arrive as `mixed` (config, form state, model keys) are narrowed before use: `config()->string()` / `->integer()` / `->boolean()` / `->array()`, `Support\Cast`, or `is_string()` / `is_int()` guards. No bare `(string)` / `(int)` casts on `mixed`.

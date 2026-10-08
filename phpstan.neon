@@ -7,6 +7,9 @@ parameters:
         - src
         - config
         - database
+    fileExtensions:
+        - php
+        - stub
     tmpDir: .phpstan.cache
     checkModelProperties: true
     ignoreErrors: []
