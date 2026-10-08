@@ -2,8 +2,10 @@
 
 use Arzcode\SharedSecrets\Enums\SharedSecretStatus;
 use Arzcode\SharedSecrets\Models\SharedSecret;
+use Carbon\CarbonImmutable;
 use Illuminate\Console\Scheduling\Event;
 use Illuminate\Console\Scheduling\Schedule;
+use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
 
 use function Pest\Laravel\artisan;
@@ -36,6 +38,25 @@ it('deletes the rows closed longer ago than the retention period', function(): v
     travelTo('2026-02-05 10:00:00');
 
     artisan('shared-secrets:prune')->assertSuccessful();
+
+    assertModelMissing($old);
+    assertModelExists($recent);
+});
+
+it('deletes old closed rows in a host that uses immutable dates', function(): void {
+    Date::use(CarbonImmutable::class);
+    config()->set('shared-secrets.prune_after_days', 30);
+    travelTo('2026-01-01 10:00:00');
+    $old = SharedSecret::factory()->closed()->create();
+    travelTo('2026-01-20 10:00:00');
+    $recent = SharedSecret::factory()->closed()->create();
+    travelTo('2026-02-05 10:00:00');
+
+    try {
+        artisan('shared-secrets:prune')->assertSuccessful();
+    } finally {
+        Date::useDefault();
+    }
 
     assertModelMissing($old);
     assertModelExists($recent);

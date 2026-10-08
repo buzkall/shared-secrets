@@ -7,6 +7,7 @@ use Arzcode\SharedSecrets\Database\Factories\SharedSecretFactory;
 use Arzcode\SharedSecrets\Enums\SharedSecretEventType;
 use Arzcode\SharedSecrets\Enums\SharedSecretStatus;
 use Arzcode\SharedSecrets\Support\Users;
+use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
@@ -14,7 +15,6 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Support\Carbon;
 
 /**
  * @property string $id
@@ -26,13 +26,13 @@ use Illuminate\Support\Carbon;
  * @property string|null $passphrase
  * @property int $max_views
  * @property int $views_count
- * @property Carbon $expires_at
+ * @property CarbonInterface $expires_at
  * @property bool $requires_retrieval_step
  * @property bool $allows_deletion
- * @property Carbon|null $closed_at
+ * @property CarbonInterface|null $closed_at
  * @property SharedSecretStatus|null $closed_reason
- * @property Carbon|null $created_at
- * @property Carbon|null $updated_at
+ * @property CarbonInterface|null $created_at
+ * @property CarbonInterface|null $updated_at
  * @property-read Model|null $creator
  * @property-read Model|null $recipient
  */
@@ -127,7 +127,7 @@ class SharedSecret extends Model
      * @param  Builder<static>  $query
      */
     #[Scope]
-    protected function closedBefore(Builder $query, Carbon $moment): void
+    protected function closedBefore(Builder $query, CarbonInterface $moment): void
     {
         $query->whereNotNull('closed_at')->where('closed_at', '<', $moment);
     }

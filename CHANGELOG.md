@@ -16,6 +16,10 @@ All notable changes to `arzcode/shared-secrets` are documented here. The format 
 - Plugin options: `navigationGroup()`, `navigationSort()`, `navigationIcon()`, `authorize()`, `viewAllSecrets()`, `recipients()`, `recipientQuery()`, `revealPath()` and `revealLogoHeight()`.
 - English, Spanish and Catalan translations.
 
+### Fixed
+
+- `shared-secrets:prune` no longer fails with a `TypeError` in a host that uses immutable dates (`Date::use(CarbonImmutable::class)`).
+
 ### Security
 
 - The content and the note are encrypted at rest and the passphrase is hashed. The content and the passphrase are wiped as soon as a secret expires, runs out of views, is revoked or is deleted by its reader; the row is kept for the activity log.

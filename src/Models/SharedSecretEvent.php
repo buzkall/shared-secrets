@@ -5,10 +5,10 @@ namespace Arzcode\SharedSecrets\Models;
 use Arzcode\SharedSecrets\Database\Factories\SharedSecretEventFactory;
 use Arzcode\SharedSecrets\Enums\SharedSecretEventType;
 use Arzcode\SharedSecrets\Support\Users;
+use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Support\Carbon;
 
 /**
  * @property int $id
@@ -17,7 +17,7 @@ use Illuminate\Support\Carbon;
  * @property int|string|null $user_id
  * @property string|null $ip_address
  * @property string|null $user_agent
- * @property Carbon|null $created_at
+ * @property CarbonInterface|null $created_at
  * @property-read Model|null $user
  */
 class SharedSecretEvent extends Model
