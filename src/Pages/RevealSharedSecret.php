@@ -247,7 +247,7 @@ class RevealSharedSecret extends SimplePage
 
         return new HtmlString($height === null
             ? ''
-            : "<style>.fi-simple-header .fi-logo { height: {$height} !important; }</style>");
+            : "<style>.fi-simple-header .fi-logo { height: {$height} !important; max-width: 100%; object-fit: contain; }</style>");
     }
 
     protected function consume(?string $passphrase): void

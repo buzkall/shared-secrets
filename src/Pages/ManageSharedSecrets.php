@@ -507,13 +507,17 @@ class ManageSharedSecrets extends Page implements HasTable
 
     protected function createdSecret(): ?SharedSecret
     {
-        if ($this->createdSecretId === null) {
+        $id = $this->createdSecretId;
+
+        if ($id === null) {
             return null;
         }
 
+        // once() keys its cache on the variables the closure captures: capturing the id
+        // keeps the secret looked up before create() in this request from being reused after it.
         return once(fn(): ?SharedSecret => SharedSecret::query()
             ->with('recipient')
-            ->whereKey($this->createdSecretId)
+            ->whereKey($id)
             ->where('creator_id', Filament::auth()->id())
             ->first());
     }

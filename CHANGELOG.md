@@ -2,6 +2,16 @@
 
 All notable changes to `arzcode/shared-secrets` are documented here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.0.3] - 2026-10-14
+
+### Fixed
+
+- After pushing a second secret from the same page, the link section showed the previous secret's link, or nothing at all if that secret had already been used up, instead of the new link.
+
+### Changed
+
+- The brand logo on the reader page defaults to `6rem` instead of `3rem`, and is kept inside the card's width without distortion. Set `revealLogoHeight()` to change it, or `null` to keep the panel's height.
+
 ## [1.0.2] - 2026-10-08
 
 ### Fixed

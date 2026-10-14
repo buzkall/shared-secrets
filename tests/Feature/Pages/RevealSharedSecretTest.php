@@ -357,7 +357,7 @@ it('offers no deletion when the sender did not allow it', function(): void {
 it('enlarges the brand logo on the reader page', function(): void {
     $secret = SharedSecret::factory()->create();
 
-    get(SecretUrl::for($secret))->assertSee('.fi-simple-header .fi-logo { height: 3rem !important; }', escape: false);
+    get(SecretUrl::for($secret))->assertSee('.fi-simple-header .fi-logo { height: 6rem !important; max-width: 100%; object-fit: contain; }', escape: false);
 });
 
 it('only warns that deleting affects everyone when anyone with the link can open the secret', function(): void {

@@ -30,7 +30,7 @@ class SharedSecretsPlugin implements Plugin
     protected bool|Closure $hasRecipients = true;
     protected ?Closure $modifyRecipientQueryUsing = null;
     protected string $revealPath = 'secret';
-    protected ?string $revealLogoHeight = '3rem';
+    protected ?string $revealLogoHeight = '6rem';
     protected string|UnitEnum|Closure|null $navigationGroup = null;
     protected ?int $navigationSort = null;
     protected string|BackedEnum|Htmlable|null $navigationIcon = Heroicon::OutlinedKey;

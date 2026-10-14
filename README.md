@@ -81,7 +81,7 @@ SharedSecretsPlugin::make()
     ->recipients(true)                               // allow targeting a user of the site
     ->recipientQuery(fn ($query) => $query->where('active', true))
     ->revealPath('secret')                           // URL segment of the reader link, inside the panel path
-    ->revealLogoHeight('3rem');                      // logo height on the reader page; null keeps the panel's
+    ->revealLogoHeight('6rem');                      // logo height on the reader page; null keeps the panel's
 ```
 
 Lifetimes, the maximum number of views, passphrase throttling, the retention of closed secrets and the notification

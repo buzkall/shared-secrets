@@ -1,5 +1,6 @@
 <?php
 
+use Arzcode\SharedSecrets\Actions\CloseSharedSecret;
 use Arzcode\SharedSecrets\Enums\SharedSecretEventType;
 use Arzcode\SharedSecrets\Enums\SharedSecretStatus;
 use Arzcode\SharedSecrets\Models\SharedSecret;
@@ -13,6 +14,7 @@ use Filament\Forms\Components\Select;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Notification;
+use Livewire\Features\SupportTesting\Testable;
 
 use function Pest\Laravel\actingAs;
 use function Pest\Laravel\assertDatabaseCount;
@@ -133,6 +135,47 @@ it('shows the link and drops the content and the passphrase from the page state 
         ->toContain($secret->id)
         ->not->toContain('hunter2')
         ->not->toContain('open sesame');
+});
+
+// The browser sends the typed content and the submit in a single request, so the
+// page reads the previous secret before create() runs; fillForm() would hide that.
+function pushInOneRequest(Testable $page, string $content): void
+{
+    $page->update(calls: [['method' => 'create', 'params' => [], 'path' => '']], updates: ['data.content' => $content]);
+}
+
+it('shows the link of the latest secret after pushing another one from the same page', function(): void {
+    actingAs(User::factory()->create());
+
+    $page = livewire(ManageSharedSecrets::class)
+        ->fillForm(['content' => 'first'])
+        ->call('create');
+
+    $first = SharedSecret::query()->sole();
+
+    pushInOneRequest($page, 'second');
+
+    $second = SharedSecret::query()->whereKeyNot($first->id)->sole();
+
+    $page
+        ->assertSet('createdSecretId', $second->id)
+        ->assertSee(SecretUrl::for($second))
+        ->assertDontSee(SecretUrl::for($first));
+});
+
+it('shows the link of the latest secret after the previous one was used up', function(): void {
+    actingAs(User::factory()->create());
+
+    $page = livewire(ManageSharedSecrets::class)
+        ->fillForm(['content' => 'first'])
+        ->call('create');
+
+    $first = SharedSecret::query()->sole();
+    app(CloseSharedSecret::class)->handle($first, SharedSecretStatus::Exhausted);
+
+    pushInOneRequest($page, 'second');
+
+    $page->assertSee(SecretUrl::for(SharedSecret::query()->whereKeyNot($first->id)->sole()));
 });
 
 it('requires the content', function(): void {
