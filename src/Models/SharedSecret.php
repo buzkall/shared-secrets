@@ -6,6 +6,7 @@ use Arzcode\SharedSecrets\Data\Visitor;
 use Arzcode\SharedSecrets\Database\Factories\SharedSecretFactory;
 use Arzcode\SharedSecrets\Enums\SharedSecretEventType;
 use Arzcode\SharedSecrets\Enums\SharedSecretStatus;
+use Arzcode\SharedSecrets\Support\Languages;
 use Arzcode\SharedSecrets\Support\Users;
 use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Attributes\Scope;
@@ -23,6 +24,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property int|string|null $recipient_id
  * @property string|null $content
  * @property string|null $note
+ * @property string|null $locale
  * @property string|null $passphrase
  * @property int $max_views
  * @property int $views_count
@@ -49,6 +51,7 @@ class SharedSecret extends Model
         'recipient_id',
         'content',
         'note',
+        'locale',
         'passphrase',
         'max_views',
         'views_count',
@@ -144,6 +147,22 @@ class SharedSecret extends Model
     public function isAvailable(): bool
     {
         return $this->status() === SharedSecretStatus::Active;
+    }
+
+    /**
+     * The language the sender picked. The column is only read while languages
+     * are configured, so a host that has not run the upgrade migration never
+     * touches it, even with strict models.
+     */
+    public function chosenLocale(): ?string
+    {
+        if (! Languages::enabled()) {
+            return null;
+        }
+
+        $locale = $this->getAttribute('locale');
+
+        return is_string($locale) && Languages::isValid($locale) ? $locale : null;
     }
 
     public function hasPassphrase(): bool

@@ -60,6 +60,32 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Languages
+    |--------------------------------------------------------------------------
+    |
+    | When the site describes its languages with a backed enum or an Eloquent
+    | model, set its class as the source and the sender picks the language
+    | the reader's page and the recipient's notifications are shown in. The
+    | values are locales (en, es, pt_BR…). An enum's label is its getLabel()
+    | when it implements Filament's HasLabel, its case name otherwise; a
+    | model reads the value and label attributes below. Null hides the
+    | selector and secrets are shown in the application locale.
+    |
+    | A regional variant (ba, pt_BR…) usually only translates what differs
+    | from its base language. Map it to the locale its missing strings come
+    | from; unmapped locales keep the application's fallback locale.
+    |
+    */
+
+    'languages' => [
+        'source'          => null,
+        'value_attribute' => 'code',
+        'label_attribute' => 'name',
+        'fallbacks'       => []
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Passphrase
     |--------------------------------------------------------------------------
     |

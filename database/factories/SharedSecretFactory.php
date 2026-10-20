@@ -59,6 +59,11 @@ class SharedSecretFactory extends Factory
         return $this->state(fn(): array => ['allows_deletion' => false]);
     }
 
+    public function inLocale(string $locale): static
+    {
+        return $this->state(fn(): array => ['locale' => $locale]);
+    }
+
     public function singleView(): static
     {
         return $this->state(fn(): array => ['max_views' => 1]);

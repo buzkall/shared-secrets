@@ -4,6 +4,7 @@ namespace Arzcode\SharedSecrets\Actions;
 
 use Arzcode\SharedSecrets\Models\SharedSecret;
 use Arzcode\SharedSecrets\Notifications\SharedSecretNotification;
+use Arzcode\SharedSecrets\Support\Languages;
 use Arzcode\SharedSecrets\Support\RecipientPanels;
 use Arzcode\SharedSecrets\Support\SecretUrl;
 use Arzcode\SharedSecrets\Support\Users;
@@ -26,11 +27,17 @@ class NotifyRecipient
     {
         $senderName = $sender instanceof Model ? Users::label($sender) : '';
 
+        // The language picked by the sender wins over the recipient's preference.
+        $locale = $secret->chosenLocale();
+
         if (config()->boolean('shared-secrets.notifications.mail', true)) {
-            $this->notifications->send(
-                $recipient,
-                new SharedSecretNotification($secret->id, $senderName)->afterCommit()
-            );
+            $notification = new SharedSecretNotification($secret->id, $senderName)->afterCommit();
+
+            if ($locale !== null) {
+                $notification->locale($locale);
+            }
+
+            $this->notifications->send($recipient, $notification);
         }
 
         if (! config()->boolean('shared-secrets.notifications.database', true)) {
@@ -43,7 +50,8 @@ class NotifyRecipient
             return;
         }
 
-        Notification::make()
+        // The strings are resolved now, in the chosen language and its fallback.
+        $notification = Languages::using($locale, fn(): Notification => Notification::make()
             ->title(__('shared-secrets::shared-secrets.notifications.database.title', ['sender' => $senderName]))
             ->body(__('shared-secrets::shared-secrets.notifications.database.body', [
                 'date' => $secret->expires_at->format('d/m/Y H:i:s')
@@ -55,7 +63,8 @@ class NotifyRecipient
                     ->button()
                     ->url($url)
                     ->markAsRead()
-            ])
-            ->sendToDatabase($recipient);
+            ]));
+
+        $notification->sendToDatabase($recipient);
     }
 }

@@ -5,9 +5,11 @@ use Arzcode\SharedSecrets\Enums\SharedSecretStatus;
 use Arzcode\SharedSecrets\Models\SharedSecret;
 use Arzcode\SharedSecrets\Pages\RevealSharedSecret;
 use Arzcode\SharedSecrets\Support\SecretUrl;
+use Arzcode\SharedSecrets\Tests\Fixtures\Language;
 use Arzcode\SharedSecrets\Tests\Fixtures\User;
 use Filament\Actions\Action;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Lang;
 use Illuminate\Support\Facades\URL;
 
 use function Pest\Laravel\actingAs;
@@ -373,4 +375,46 @@ it('only warns that deleting affects everyone when anyone with the link can open
     livewire(RevealSharedSecret::class, ['secret' => $targeted->id])
         ->call('reveal')
         ->assertActionExists('deleteNow', fn(Action $action): bool => $action->getModalDescription() === 'The secret will be wiped and the link will stop working.');
+});
+
+it('shows the reader page in the language chosen by the sender', function(): void {
+    config()->set('shared-secrets.languages.source', Language::class);
+    $secret = SharedSecret::factory()->inLocale('es')->create();
+
+    get(SecretUrl::for($secret))
+        ->assertSee('lang="es"', escape: false)
+        ->assertSee('Revelar secreto')
+        ->assertDontSee('Reveal secret');
+});
+
+it('keeps the chosen language on later Livewire requests', function(): void {
+    config()->set('shared-secrets.languages.source', Language::class);
+    $secret = SharedSecret::factory()->inLocale('es')->create(['content' => 'hunter2']);
+    $page = livewire(RevealSharedSecret::class, ['secret' => $secret->id]);
+    app()->setLocale('en');
+
+    $page->call('reveal')
+        ->assertSee('hunter2')
+        ->assertSee('Borrarlo ahora');
+});
+
+it('shows the reader page in the application locale when the chosen language is no longer offered', function(): void {
+    $secret = SharedSecret::factory()->inLocale('es')->create();
+
+    get(SecretUrl::for($secret))
+        ->assertOk()
+        ->assertSee('Reveal secret');
+});
+
+it('fills in the strings of a regional variant from its configured fallback', function(): void {
+    config()->set('shared-secrets.languages.source', Language::class);
+    config()->set('shared-secrets.languages.fallbacks', ['ba' => 'ca']);
+    // A host panel that pins its own fallback, as a locale middleware does.
+    Lang::setFallback('es');
+    $secret = SharedSecret::factory()->inLocale('ba')->create();
+
+    get(SecretUrl::for($secret))
+        ->assertSee('lang="ba"', escape: false)
+        ->assertSee('Revela el secret')
+        ->assertDontSee('Revelar secreto');
 });

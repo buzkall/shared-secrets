@@ -57,6 +57,12 @@ return [
             'placeholder' => 'Cualquiera con el enlace',
             'helper'      => 'Elige un usuario para restringirle el secreto: recibirá un aviso y tendrá que iniciar sesión para abrirlo. Déjalo vacío para obtener un enlace que cualquiera puede abrir.',
             'invalid'     => 'El destinatario seleccionado no es válido.'
+        ],
+
+        'locale' => [
+            'label'     => 'Idioma',
+            'helper'    => 'El idioma en el que el lector ve la página del secreto y las notificaciones.',
+            'migration' => 'Los idiomas están configurados pero aún no se guardan. Ejecuta `php artisan vendor:publish --tag=shared-secrets-migrations` y `php artisan migrate` para activar este campo.'
         ]
     ],
 
@@ -77,6 +83,7 @@ return [
         'creator'    => 'Enviado por',
         'recipient'  => 'Destinatario',
         'anyone'     => 'Cualquiera con el enlace',
+        'locale'     => 'Idioma',
         'status'     => 'Estado',
         'views'      => 'Visualizaciones',
         'expires_at' => 'Caduca',

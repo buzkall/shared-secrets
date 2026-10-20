@@ -18,6 +18,12 @@ return new class extends Migration
             $table->timestamps();
         });
 
+        Schema::create('languages', function(Blueprint $table): void {
+            $table->id();
+            $table->string('code');
+            $table->string('name');
+        });
+
         Schema::create('notifications', function(Blueprint $table): void {
             $table->uuid('id')->primary();
             $table->string('type');

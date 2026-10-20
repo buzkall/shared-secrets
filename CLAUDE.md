@@ -24,7 +24,7 @@ Targets: **PHP 8.4+, Laravel 12 or 13, Filament 5.8+, Livewire 4**.
 | `src/Pages/RevealSharedSecret.php` | Public reader page (`SimplePage`) behind the signed route |
 | `src/Actions/` | `CreateSharedSecret`, `ConsumeSharedSecret`, `CloseSharedSecret`, `NotifyRecipient` |
 | `src/Models/` | `SharedSecret` (ULID key), `SharedSecretEvent` |
-| `src/Support/` | `SecretUrl`, `Users`, `RecipientPanels`, `PanelProviders`, `Cast` |
+| `src/Support/` | `SecretUrl`, `Users`, `Languages`, `RecipientPanels`, `PanelProviders`, `Cast` |
 | `src/Commands/` | `PruneSharedSecretsCommand`, `UninstallCommand` (the install command is built by Spatie from the provider) |
 | `src/Http/Middleware/ProtectRevealResponse.php` | Headers and `HEAD` handling for the reader route |
 
@@ -42,15 +42,16 @@ There are no Blade views and no CSS or JS assets: both pages are composed from F
 
 ## Database schema
 
-Table names come from `config('shared-secrets.table_names')`. The migration is a published stub (`database/migrations/create_shared_secrets_tables.php.stub`), never auto-loaded in a host. Keep it a single file with no PHPDoc.
+Table names come from `config('shared-secrets.table_names')`. Migrations are published stubs, never auto-loaded in a host, with no PHPDoc: `create_shared_secrets_tables.php.stub` creates the tables as of 1.0, and every later change is an additive upgrade stub (`add_locale_to_shared_secrets_table.php.stub`) listed in `SharedSecretsServiceProvider::migrationNames()`, so the installer publishes it and the uninstaller deletes it. Never edit a released stub; add a new one, guarded with `Schema::hasColumn()`, and load it in `TestCase::defineDatabaseMigrations()` and `workbench/database/migrations`.
 
 | Table | Columns |
 |---|---|
-| `shared_secrets` | `id` (ULID), `panel`, `creator_id`, `recipient_id` (both nullable, null on delete), `content` (encrypted, nullable), `note` (encrypted, nullable), `passphrase` (hash, nullable), `max_views`, `views_count`, `expires_at`, `requires_retrieval_step`, `allows_deletion`, `closed_at`, `closed_reason`, timestamps |
+| `shared_secrets` | `id` (ULID), `panel`, `creator_id`, `recipient_id` (both nullable, null on delete), `content` (encrypted, nullable), `note` (encrypted, nullable), `locale` (nullable), `passphrase` (hash, nullable), `max_views`, `views_count`, `expires_at`, `requires_retrieval_step`, `allows_deletion`, `closed_at`, `closed_reason`, timestamps |
 | `shared_secret_events` | `id`, `shared_secret_id` (cascade), `type`, `user_id` (nullable), `ip_address`, `user_agent`, `created_at` |
 
 - `SharedSecretStatus` (`Active`, `Expired`, `Exhausted`, `Revoked`, `Deleted`) is both the computed status and the value of `closed_reason`. `SharedSecret::status()` reports `Expired` for an open secret past `expires_at`, before the prune command has closed it.
 - `SharedSecretEventType`: `Viewed`, `PassphraseFailed`, `DeletedByRecipient`, `Revoked`.
+- `locale` is the language the sender picked, from the enum or model named in `config('shared-secrets.languages.source')` (null by default, which hides the selector). `Support\Languages` reads the options and only ever applies an offered locale: `RevealSharedSecret` sets it in `mount()` and `hydrate()`, `NotifyRecipient` sends both notifications in it. `languages.fallbacks` sets the translator fallback for a regional variant; `apply()` sets it for the reader's request, and the notifications go through `Languages::using()`, which restores the locale and the fallback afterwards so a queue worker is never left changed. A host may update without running the upgrade migration, so the column is only written when a locale was chosen and only read through `SharedSecret::chosenLocale()`, which returns null without touching it while languages are off. `Languages::enabled()` also requires the column (`Languages::isStored()`); with a source configured and no column, the select is shown disabled with the migration commands (`needsMigration()`) (`tests/Feature/Database/AddLocaleMigrationTest.php` drops the column and runs the whole flow).
 - The user model is never hard-coded: `Support\Users::model()` reads `config('shared-secrets.user_model') ?? config('auth.providers.users.model')`. That key ships as `null`, so it must fall back with `??`; `config($key, $default)` would never apply the default (Rector's `ApplyDefaultInsteadOfNullCoalesceRector` is skipped for this reason).
 
 ## Security rules (this is the whole product)

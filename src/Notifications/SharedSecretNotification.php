@@ -3,6 +3,7 @@
 namespace Arzcode\SharedSecrets\Notifications;
 
 use Arzcode\SharedSecrets\Models\SharedSecret;
+use Arzcode\SharedSecrets\Support\Languages;
 use Arzcode\SharedSecrets\Support\SecretUrl;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -38,7 +39,16 @@ class SharedSecretNotification extends Notification implements ShouldQueue
         return $this->secret()?->isAvailable() ?? false;
     }
 
+    /**
+     * Laravel switches to the notification's locale but leaves the fallback
+     * alone, so a regional variant gets its configured fallback here.
+     */
     public function toMail(object $notifiable): MailMessage
+    {
+        return Languages::using($this->locale, fn(): MailMessage => $this->mailMessage());
+    }
+
+    protected function mailMessage(): MailMessage
     {
         $secret = $this->secret();
 

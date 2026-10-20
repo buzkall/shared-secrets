@@ -57,6 +57,12 @@ return [
             'placeholder' => 'Qualsevol amb l\'enllaç',
             'helper'      => 'Tria un usuari per restringir-li el secret: rebrà un avís i haurà d\'iniciar sessió per obrir-lo. Deixa-ho buit per obtenir un enllaç que qualsevol pot obrir.',
             'invalid'     => 'El destinatari seleccionat no és vàlid.'
+        ],
+
+        'locale' => [
+            'label'     => 'Idioma',
+            'helper'    => "L'idioma en què el lector veu la pàgina del secret i les notificacions.",
+            'migration' => 'Els idiomes estan configurats però encara no es desen. Executa `php artisan vendor:publish --tag=shared-secrets-migrations` i `php artisan migrate` per activar aquest camp.'
         ]
     ],
 
@@ -77,6 +83,7 @@ return [
         'creator'    => 'Enviat per',
         'recipient'  => 'Destinatari',
         'anyone'     => 'Qualsevol amb l\'enllaç',
+        'locale'     => 'Idioma',
         'status'     => 'Estat',
         'views'      => 'Visualitzacions',
         'expires_at' => 'Caduca',

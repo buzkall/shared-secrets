@@ -11,6 +11,7 @@ use Arzcode\SharedSecrets\Models\SharedSecret;
 use Arzcode\SharedSecrets\Models\SharedSecretEvent;
 use Arzcode\SharedSecrets\SharedSecretsPlugin;
 use Arzcode\SharedSecrets\Support\Cast;
+use Arzcode\SharedSecrets\Support\Languages;
 use Arzcode\SharedSecrets\Support\SecretUrl;
 use Arzcode\SharedSecrets\Support\Users;
 use BackedEnum;
@@ -166,7 +167,19 @@ class ManageSharedSecrets extends Page implements HasTable
                             ))
                             ->getOptionLabelUsing(fn(mixed $value): ?string => static::recipientLabel($value))
                             ->visible(fn(): bool => static::plugin()?->hasRecipients() ?? false)
-                            ->columnSpanFull()
+                            // Shares its row with the language when there is one to pick.
+                            ->columnSpan(fn(): int|string => Languages::configured() ? 1 : 'full'),
+
+                        Select::make('locale')
+                            ->label(__('shared-secrets::shared-secrets.form.locale.label'))
+                            ->helperText(fn(): string => Languages::needsMigration()
+                                ? __('shared-secrets::shared-secrets.form.locale.migration')
+                                : __('shared-secrets::shared-secrets.form.locale.helper'))
+                            ->options(fn(): array => Languages::options())
+                            ->default(fn(): ?string => Languages::isValid(app()->getLocale()) ? app()->getLocale() : null)
+                            // Configured before the upgrade migration ran: say what is missing instead of failing on save.
+                            ->disabled(fn(): bool => Languages::needsMigration())
+                            ->visible(fn(): bool => Languages::configured())
                     ])
             ]);
     }
@@ -242,6 +255,7 @@ class ManageSharedSecrets extends Page implements HasTable
             requiresRetrievalStep: (bool)($data['requires_retrieval_step'] ?? true),
             allowsDeletion: (bool)($data['allows_deletion'] ?? true),
             recipient: $recipient,
+            locale: Languages::enabled() ? Cast::nullableString($data['locale'] ?? null) : null,
         );
 
         $this->createdSecretId = $secret->id;
@@ -279,6 +293,13 @@ class ManageSharedSecrets extends Page implements HasTable
                     ->state(fn(SharedSecret $record): string => $record->recipient === null
                         ? __('shared-secrets::shared-secrets.table.anyone')
                         : Users::label($record->recipient))
+                    ->sortable(false),
+
+                TextColumn::make('locale')
+                    ->label(__('shared-secrets::shared-secrets.table.locale'))
+                    ->formatStateUsing(fn(?string $state): string => Languages::label($state) ?? (string)$state)
+                    ->placeholder('—')
+                    ->visible(fn(): bool => Languages::enabled())
                     ->sortable(false),
 
                 TextColumn::make('status')

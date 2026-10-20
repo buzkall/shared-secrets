@@ -11,6 +11,7 @@ use Arzcode\SharedSecrets\Enums\SharedSecretStatus;
 use Arzcode\SharedSecrets\Models\SharedSecret;
 use Arzcode\SharedSecrets\SharedSecretsPlugin;
 use Arzcode\SharedSecrets\Support\Cast;
+use Arzcode\SharedSecrets\Support\Languages;
 use Arzcode\SharedSecrets\Support\RecipientPanels;
 use Filament\Actions\Action;
 use Filament\Facades\Filament;
@@ -71,6 +72,7 @@ class RevealSharedSecret extends SimplePage
     public function mount(string $secret): void
     {
         $this->secretId = $secret;
+        Languages::apply($this->secret()?->chosenLocale());
 
         if (! $this->authorizeAccess(redirectsGuests: true)) {
             return;
@@ -81,10 +83,12 @@ class RevealSharedSecret extends SimplePage
 
     /**
      * Livewire update requests carry no signature and skip the route
-     * middleware, so every later request is authorised again here.
+     * middleware, so every later request is authorised again here. The
+     * locale is not kept between requests either, so it is applied again.
      */
     public function hydrate(): void
     {
+        Languages::apply($this->secret()?->chosenLocale());
         $this->authorizeAccess(redirectsGuests: false);
     }
 

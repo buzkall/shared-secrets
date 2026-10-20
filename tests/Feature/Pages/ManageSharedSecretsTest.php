@@ -7,6 +7,7 @@ use Arzcode\SharedSecrets\Models\SharedSecret;
 use Arzcode\SharedSecrets\Notifications\SharedSecretNotification;
 use Arzcode\SharedSecrets\Pages\ManageSharedSecrets;
 use Arzcode\SharedSecrets\Support\SecretUrl;
+use Arzcode\SharedSecrets\Tests\Fixtures\Language;
 use Arzcode\SharedSecrets\Tests\Fixtures\User;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\Testing\TestAction;
@@ -408,4 +409,45 @@ it('opens the activity log of a secret', function(): void {
     livewire(ManageSharedSecrets::class)
         ->mountAction(TestAction::make('events')->table($secret))
         ->assertActionMounted(TestAction::make('events')->table($secret));
+});
+
+it('offers no language field when no languages source is configured', function(): void {
+    actingAs(User::factory()->create());
+
+    livewire(ManageSharedSecrets::class)->assertFormFieldHidden('locale');
+});
+
+it('stores the language chosen by the sender', function(): void {
+    config()->set('shared-secrets.languages.source', Language::class);
+    actingAs(User::factory()->create());
+
+    livewire(ManageSharedSecrets::class)
+        ->assertFormFieldVisible('locale')
+        ->assertSchemaStateSet(['locale' => 'en'], 'form')
+        ->fillForm(['content' => 'hunter2', 'locale' => 'es'])
+        ->call('create')
+        ->assertHasNoFormErrors();
+
+    expect(SharedSecret::query()->sole()->locale)->toBe('es');
+});
+
+it('rejects a language that the source does not offer', function(): void {
+    config()->set('shared-secrets.languages.source', Language::class);
+    actingAs(User::factory()->create());
+
+    livewire(ManageSharedSecrets::class)
+        ->fillForm(['content' => 'hunter2', 'locale' => 'fr'])
+        ->call('create')
+        ->assertHasFormErrors(['locale']);
+
+    assertDatabaseCount('shared_secrets', 0);
+});
+
+it('lists the language of each secret by its label', function(): void {
+    config()->set('shared-secrets.languages.source', Language::class);
+    $user = User::factory()->create();
+    actingAs($user);
+    SharedSecret::factory()->from($user)->inLocale('ca')->create();
+
+    livewire(ManageSharedSecrets::class)->assertSee('Català');
 });

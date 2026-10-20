@@ -87,6 +87,32 @@ SharedSecretsPlugin::make()
 Lifetimes, the maximum number of views, passphrase throttling, the retention of closed secrets and the notification
 channels are set in `config/shared-secrets.php`.
 
+### Languages
+
+When your site describes its languages with a backed enum or an Eloquent model, point `languages.source` at it and the
+push form offers a language selector. The reader page and the recipient's notifications are shown in the chosen
+language; the values must be locales your application has translations for (`en`, `es`, `pt_BR`…).
+
+```php
+'languages' => [
+    'source'          => App\Enums\Language::class, // or App\Models\Language::class
+    'value_attribute' => 'code',                     // model only: the column holding the locale
+    'label_attribute' => 'name',                     // model only: the column shown in the select
+    'fallbacks'       => ['ba' => 'ca']              // regional variants: where their missing strings come from
+],
+```
+
+A regional variant usually only translates what differs from its base language. Without a `fallbacks` entry, its
+missing strings come from the translator's current fallback, which a panel's locale middleware may have set to another
+language. Mapped, the reader page and both notifications fill them in from the locale you name.
+
+An enum is labelled with `getLabel()` when it implements Filament's `HasLabel`, with its case name otherwise. It ships as
+`null`, which hides the selector.
+
+Upgrading from 1.0.x: the language is stored in a new column, which is never touched until it exists. Until then the
+language field is disabled and shows what to run: `php artisan vendor:publish --tag=shared-secrets-migrations`
+and `php artisan migrate`.
+
 ## How it works
 
 - **The link** is `/{panel}/secret/{id}?signature=…`. The signature proves the link was issued by your application;

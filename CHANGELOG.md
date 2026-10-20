@@ -2,6 +2,16 @@
 
 All notable changes to `arzcode/shared-secrets` are documented here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.1.0] - 2026-10-20
+
+### Added
+
+- A language selector on the push form, shown when `languages.source` in the config names a backed enum or an Eloquent model describing the site's languages; it ships as `null`, which keeps the selector hidden. The reader page and the recipient's email and panel notification are shown in the chosen language. `languages.fallbacks` maps a regional variant to the locale its missing strings come from (`['ba' => 'ca']`).
+
+### Upgrading
+
+- The secret's language is stored in a new `locale` column. Nothing reads or writes it until it exists, so updating is safe without it; while `languages.source` is set and the column is missing, the language field is disabled and tells the sender to run it: `php artisan vendor:publish --tag=shared-secrets-migrations` and `php artisan migrate`.
+
 ## [1.0.3] - 2026-10-14
 
 ### Fixed

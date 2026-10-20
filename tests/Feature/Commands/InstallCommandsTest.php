@@ -1,5 +1,6 @@
 <?php
 
+use Arzcode\SharedSecrets\SharedSecretsServiceProvider;
 use Arzcode\SharedSecrets\Support\PanelProviders;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Process;
@@ -44,7 +45,9 @@ beforeEach(function(): void {
 afterEach(function(): void {
     File::deleteDirectory($this->providersPath);
     File::delete($this->configFile);
-    File::delete(glob($this->migrationsPath . '/*_create_shared_secrets_tables.php') ?: []);
+    foreach (SharedSecretsServiceProvider::migrationNames() as $name) {
+        File::delete(glob($this->migrationsPath . "/*_{$name}.php") ?: []);
+    }
 });
 
 it('installs the package: publishes the migration and the config and registers the plugin', function(): void {
@@ -57,6 +60,7 @@ it('installs the package: publishes the migration and the config and registers t
     $provider = file_get_contents($this->providerFile);
 
     expect(glob($this->migrationsPath . '/*_create_shared_secrets_tables.php'))->toHaveCount(1)
+        ->and(glob($this->migrationsPath . '/*_add_locale_to_shared_secrets_table.php'))->toHaveCount(1)
         ->and($this->configFile)->toBeFile()
         ->and($provider)->toContain('use Arzcode\SharedSecrets\SharedSecretsPlugin;')
         ->and($provider)->toContain("SomeOtherPlugin::make(),\n                SharedSecretsPlugin::make(),\n            ]);")
@@ -77,7 +81,8 @@ it('publishes and registers nothing twice when the install runs again', function
         ->assertSuccessful();
 
     expect(substr_count(file_get_contents($this->providerFile), PanelProviders::ENTRY))->toBe(1)
-        ->and(glob($this->migrationsPath . '/*_create_shared_secrets_tables.php'))->toHaveCount(1);
+        ->and(glob($this->migrationsPath . '/*_create_shared_secrets_tables.php'))->toHaveCount(1)
+        ->and(glob($this->migrationsPath . '/*_add_locale_to_shared_secrets_table.php'))->toHaveCount(1);
 });
 
 it('leaves a panel provider untouched when its registration is declined', function(): void {
@@ -106,7 +111,7 @@ it('uninstalls the package, reversing the install', function(): void {
     $this->artisan('shared-secrets:uninstall')
         ->expectsConfirmation('Do you want to continue?', 'yes')
         ->expectsConfirmation('Would you like to drop the Shared Secrets database tables?', 'yes')
-        ->expectsConfirmation('Delete 1 published Shared Secrets migration file(s)?', 'yes')
+        ->expectsConfirmation('Delete 2 published Shared Secrets migration file(s)?', 'yes')
         ->expectsConfirmation('Delete the published config file config/shared-secrets.php?', 'yes')
         ->expectsConfirmation('Delete the published translations in lang/vendor/shared-secrets?', 'yes')
         ->assertSuccessful();
@@ -118,6 +123,7 @@ it('uninstalls the package, reversing the install', function(): void {
         ->and(Schema::hasTable('shared_secrets'))->toBeFalse()
         ->and(Schema::hasTable('shared_secret_events'))->toBeFalse()
         ->and(glob($this->migrationsPath . '/*_create_shared_secrets_tables.php'))->toBe([])
+        ->and(glob($this->migrationsPath . '/*_add_locale_to_shared_secrets_table.php'))->toBe([])
         ->and($this->configFile)->not->toBeFile()
         ->and(lang_path('vendor/shared-secrets'))->not->toBeDirectory();
 
@@ -136,7 +142,7 @@ it('keeps the tables, the migration and the config when each deletion is decline
     $this->artisan('shared-secrets:uninstall')
         ->expectsConfirmation('Do you want to continue?', 'yes')
         ->expectsConfirmation('Would you like to drop the Shared Secrets database tables?', 'no')
-        ->expectsConfirmation('Delete 1 published Shared Secrets migration file(s)?', 'no')
+        ->expectsConfirmation('Delete 2 published Shared Secrets migration file(s)?', 'no')
         ->expectsConfirmation('Delete the published config file config/shared-secrets.php?', 'no')
         ->assertSuccessful();
 

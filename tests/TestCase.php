@@ -80,5 +80,6 @@ class TestCase extends Orchestra
         $this->loadMigrationsFrom(__DIR__ . '/Fixtures/migrations');
 
         (include __DIR__ . '/../database/migrations/create_shared_secrets_tables.php.stub')->up();
+        (include __DIR__ . '/../database/migrations/add_locale_to_shared_secrets_table.php.stub')->up();
     }
 }

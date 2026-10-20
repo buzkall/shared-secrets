@@ -3,7 +3,9 @@
 use Arzcode\SharedSecrets\Models\SharedSecret;
 use Arzcode\SharedSecrets\Notifications\SharedSecretNotification;
 use Arzcode\SharedSecrets\Support\SecretUrl;
+use Arzcode\SharedSecrets\Tests\Fixtures\Language;
 use Arzcode\SharedSecrets\Tests\Fixtures\User;
+use Illuminate\Support\Facades\Lang;
 
 use function Pest\Laravel\travelTo;
 
@@ -49,4 +51,20 @@ it('sends no email for a secret that was closed before the queue got to it', fun
     $recipient->notify(new SharedSecretNotification($secret->id, 'Ada Sender'));
 
     expect(app('mailer')->getSymfonyTransport()->messages())->toHaveCount(0);
+});
+
+it('writes the email of a regional variant with the strings of its configured fallback', function(): void {
+    config()->set('shared-secrets.languages.source', Language::class);
+    config()->set('shared-secrets.languages.fallbacks', ['ba' => 'ca']);
+    Lang::setFallback('es');
+    $recipient = User::factory()->create();
+    $secret = SharedSecret::factory()->to($recipient)->inLocale('ba')->create();
+    $notification = new SharedSecretNotification($secret->id, 'Ada Sender')->locale('ba');
+
+    // Laravel switches to the notification's locale before building the email.
+    app()->setLocale('ba');
+    $mail = $notification->toMail($recipient);
+
+    expect($mail->subject)->toBe('Ada Sender ha compartit un secret amb tu')
+        ->and(Lang::getFallback())->toBe('es');
 });

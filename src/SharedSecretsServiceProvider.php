@@ -69,7 +69,8 @@ class SharedSecretsServiceProvider extends PackageServiceProvider
     public static function migrationNames(): array
     {
         return [
-            'create_shared_secrets_tables'
+            'create_shared_secrets_tables',
+            'add_locale_to_shared_secrets_table'
         ];
     }
 

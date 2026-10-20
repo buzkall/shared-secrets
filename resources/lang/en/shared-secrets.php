@@ -57,6 +57,12 @@ return [
             'placeholder' => 'Anyone with the link',
             'helper'      => 'Pick a user to restrict the secret to them: they are notified and must log in to open it. Leave it empty to get a link anyone can open.',
             'invalid'     => 'The selected recipient is not valid.'
+        ],
+
+        'locale' => [
+            'label'     => 'Language',
+            'helper'    => 'The language the reader sees the secret page and the notifications in.',
+            'migration' => 'Languages are configured but not stored yet. Run `php artisan vendor:publish --tag=shared-secrets-migrations` and `php artisan migrate` to enable this field.'
         ]
     ],
 
@@ -77,6 +83,7 @@ return [
         'creator'    => 'Sent by',
         'recipient'  => 'Recipient',
         'anyone'     => 'Anyone with the link',
+        'locale'     => 'Language',
         'status'     => 'Status',
         'views'      => 'Views',
         'expires_at' => 'Expires',
