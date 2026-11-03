@@ -2,6 +2,19 @@
 
 All notable changes to `arzcode/shared-secrets` are documented here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.2.0] - 2026-11-03
+
+### Added
+
+- `languages.hosts` in the config, for sites that serve each language from its own domain: it maps a locale to its host (`example.cat`, or `https://example.cat`), or names a static method returning the map as `[App\Enums\Language::class, 'hosts']`, which is called once per request or queued job. The secret's link is built and signed on the host of its language, and a regional variant uses its fallback's host. It ships as `null`, which keeps every link on the application URL.
+- When a guest opens a secret targeted at a user from a language host, the login page they are sent to is on that same host, so the link they are returned to after logging in is kept in the session they log in to.
+
+### Upgrading
+
+- Every host listed in `languages.hosts` must reach the application and serve the panel's routes, its login included. A panel bound to its own domains with `->domain()` or `->domains()` keeps its links and its login on those domains and ignores `languages.hosts`.
+- Every host listed in `languages.hosts` also needs a working session: leave `SESSION_DOMAIN` empty so each domain keeps its own cookie, or use subdomains and set it to the shared parent (`.example.com`). A `SESSION_DOMAIN` the language hosts are not part of leaves the reader page without a session (419 errors). If the application trusts only some hosts (`TrustHosts`), add every language host. With separate domains a recipient logs in once per domain, and passkeys or social and single sign-on callbacks registered for the main domain only will not work on the others; use subdomains in that case.
+- A host with a path, a query or a scheme other than `http` or `https` is ignored, and the link stays on the application URL. Without a scheme, the link takes the scheme of `app.url`.
+
 ## [1.1.0] - 2026-10-20
 
 ### Added

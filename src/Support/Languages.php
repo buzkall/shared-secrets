@@ -17,6 +17,8 @@ use LogicException;
  */
 class Languages
 {
+    public const string HOSTS_BINDING = 'shared-secrets.languages.hosts';
+
     /**
      * @return class-string<BackedEnum>|class-string<Model>|null
      */
@@ -106,6 +108,68 @@ class Languages
         $fallback = config()->array('shared-secrets.languages.fallbacks', [])[$locale] ?? null;
 
         return is_string($fallback) && preg_match('/^[A-Za-z0-9_-]+$/', $fallback) === 1 ? $fallback : null;
+    }
+
+    /**
+     * The host a secret in this locale is linked from, for sites that serve
+     * each language from its own domain. Looked up by the locale, then by its
+     * fallback, so a regional variant shares its base language's domain.
+     * Null keeps the link on the application's own URL.
+     */
+    public static function hostFor(?string $locale): ?string
+    {
+        if ($locale === null || ! static::isValid($locale)) {
+            return null;
+        }
+
+        $hosts = static::hosts();
+        $fallback = static::fallbackFor($locale);
+
+        return static::validHost($hosts[$locale] ?? null)
+            ?? ($fallback === null ? null : static::validHost($hosts[$fallback] ?? null));
+    }
+
+    /**
+     * The locale => host map from the config: either the map itself or a
+     * static method returning it, given as [Class::class, 'method'] so that
+     * config:cache can still serialise it. A method is called once per
+     * request or queued job, not once per link.
+     *
+     * @return array<array-key, mixed>
+     */
+    public static function hosts(): array
+    {
+        $hosts = app(self::HOSTS_BINDING);
+
+        return is_array($hosts) ? $hosts : [];
+    }
+
+    /**
+     * Reads the hosts setting. Only a [Class::class, 'method'] pair or a
+     * closure is ever called, so a string that happens to name a function
+     * is ignored rather than run.
+     */
+    public static function resolveHosts(): mixed
+    {
+        $hosts = config('shared-secrets.languages.hosts');
+
+        if ($hosts instanceof Closure || (is_array($hosts) && array_is_list($hosts) && is_callable($hosts))) {
+            return $hosts();
+        }
+
+        return $hosts;
+    }
+
+    /**
+     * A bare host (example.cat, example.cat:8080) or a scheme and host
+     * (https://example.cat). Anything with a path or a query would produce a
+     * link whose signature never matches, so it keeps the application URL.
+     */
+    protected static function validHost(mixed $host): ?string
+    {
+        return is_string($host) && preg_match('~^(https?://)?[A-Za-z0-9-]+(\.[A-Za-z0-9-]+)*(:\d{1,5})?/?$~', $host) === 1
+            ? rtrim($host, '/')
+            : null;
     }
 
     public static function apply(?string $locale): void

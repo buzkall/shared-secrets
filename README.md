@@ -98,13 +98,32 @@ language; the values must be locales your application has translations for (`en`
     'source'          => App\Enums\Language::class, // or App\Models\Language::class
     'value_attribute' => 'code',                     // model only: the column holding the locale
     'label_attribute' => 'name',                     // model only: the column shown in the select
-    'fallbacks'       => ['ba' => 'ca']              // regional variants: where their missing strings come from
+    'fallbacks'       => ['ba' => 'ca'],             // regional variants: where their missing strings come from
+    'hosts'           => null                        // one domain per language: ['ca' => 'example.cat', 'es' => 'example.es']
 ],
 ```
 
 A regional variant usually only translates what differs from its base language. Without a `fallbacks` entry, its
 missing strings come from the translator's current fallback, which a panel's locale middleware may have set to another
 language. Mapped, the reader page and both notifications fill them in from the locale you name.
+
+When each language lives on its own domain, `languages.hosts` maps a locale to its host and the reader's link is built
+(and signed) on it. A regional variant uses its fallback's host, and a locale without one keeps the application URL. Pass
+the map itself or a static method that returns it, `[App\Enums\Language::class, 'hosts']`, which still works with
+`config:cache`; it is called once per request or queued job. A host given without a scheme takes the one of `app.url`,
+and a value with a path or a query is ignored.
+
+Every host listed must reach the application and serve the panel's routes. A guest opening a secret targeted at a user is
+sent to the login on the same host, so they log in to the session that remembers the link. A panel bound to its own
+domains (`->domain()`) keeps its links and its login there and ignores `languages.hosts`.
+
+Each host also needs a working session, since the reader page and the login both rely on it: leave `SESSION_DOMAIN`
+empty so every domain keeps its own cookie, or serve the languages from subdomains (`es.example.com`) and set it to
+`.example.com` to share one session. A `SESSION_DOMAIN` that the language hosts are not part of leaves them without a
+session, and the reader page fails with 419 errors. If the application trusts only some hosts (`TrustHosts`), list every
+language host. With separate domains, a recipient logs in once per domain, and logins bound to a single domain (passkeys,
+social or single sign-on callbacks registered for the main domain only) do not work on the others; use subdomains in that
+case.
 
 An enum is labelled with `getLabel()` when it implements Filament's `HasLabel`, with its case name otherwise. It ships as
 `null`, which hides the selector.

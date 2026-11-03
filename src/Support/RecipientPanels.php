@@ -34,9 +34,12 @@ class RecipientPanels
 
     /**
      * The login page to send a guest to, preferring the panel the secret was
-     * created in when the recipient can access it.
+     * created in when the recipient can access it. Given a host (the one
+     * the secret's link was built on), the login is built there too, so the
+     * session that keeps the link as the intended URL is the one the user
+     * logs in to; a panel bound to its own domains keeps its own URL.
      */
-    public static function loginUrl(Model $user, ?Panel $preferred = null): ?string
+    public static function loginUrl(Model $user, ?Panel $preferred = null, ?string $host = null): ?string
     {
         $panels = static::accessibleTo($user);
 
@@ -44,7 +47,8 @@ class RecipientPanels
 
         foreach ($panels as $panel) {
             if ($panel->hasLogin()) {
-                return $panel->getLoginUrl();
+                return SecretUrl::generatorFor($panel->getDomains() === [] ? $host : null)
+                    ->route($panel->generateRouteName('auth.login'));
             }
         }
 

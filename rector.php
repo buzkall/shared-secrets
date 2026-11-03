@@ -2,6 +2,7 @@
 
 use Rector\Config\RectorConfig;
 use Rector\DeadCode\Rector\Cast\RecastingRemovalRector;
+use Rector\Php81\Rector\Array_\ArrayToFirstClassCallableRector;
 use Rector\TypeDeclaration\Rector\StmtsAwareInterface\SafeDeclareStrictTypesRector;
 use RectorLaravel\Rector\Coalesce\ApplyDefaultInsteadOfNullCoalesceRector;
 use RectorLaravel\Rector\FuncCall\AppToResolveRector;
@@ -33,6 +34,8 @@ return RectorConfig::configure()
         RecastingRemovalRector::class,
         AppToResolveRector::class,
         // Config keys that ship as null must fall back with ??: config()'s default only applies to a missing key.
-        ApplyDefaultInsteadOfNullCoalesceRector::class
+        ApplyDefaultInsteadOfNullCoalesceRector::class,
+        // The [Class::class, 'method'] pair is the hosts setting config:cache can serialise; its test must keep it.
+        ArrayToFirstClassCallableRector::class => [__DIR__ . '/tests/Feature/Support/SecretUrlTest.php']
     ])
     ->withImportNames(importShortClasses: false, removeUnusedImports: true);

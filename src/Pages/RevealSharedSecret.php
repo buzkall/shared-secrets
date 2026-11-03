@@ -13,6 +13,7 @@ use Arzcode\SharedSecrets\SharedSecretsPlugin;
 use Arzcode\SharedSecrets\Support\Cast;
 use Arzcode\SharedSecrets\Support\Languages;
 use Arzcode\SharedSecrets\Support\RecipientPanels;
+use Arzcode\SharedSecrets\Support\SecretUrl;
 use Filament\Actions\Action;
 use Filament\Facades\Filament;
 use Filament\Forms\Components\TextInput;
@@ -298,9 +299,10 @@ class RevealSharedSecret extends SimplePage
         $userId = Cast::key(Filament::auth()->id());
 
         if ($userId === null && $redirectsGuests) {
+            $panel = Filament::getPanels()[$secret->panel] ?? null;
             $loginUrl = $secret->recipient === null
                 ? null
-                : RecipientPanels::loginUrl($secret->recipient, Filament::getPanels()[$secret->panel] ?? null);
+                : RecipientPanels::loginUrl($secret->recipient, $panel, $panel === null ? null : SecretUrl::hostFor($secret, $panel));
 
             abort_if($loginUrl === null, 403);
 

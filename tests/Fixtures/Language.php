@@ -22,4 +22,12 @@ enum Language: string implements HasLabel
             self::Ba => 'Balear'
         };
     }
+
+    /**
+     * @return array<string, string>
+     */
+    public static function hosts(): array
+    {
+        return ['ca' => 'example.cat', 'es' => 'example.es'];
+    }
 }

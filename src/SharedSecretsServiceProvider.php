@@ -4,6 +4,7 @@ namespace Arzcode\SharedSecrets;
 
 use Arzcode\SharedSecrets\Commands\PruneSharedSecretsCommand;
 use Arzcode\SharedSecrets\Commands\UninstallCommand;
+use Arzcode\SharedSecrets\Support\Languages;
 use Arzcode\SharedSecrets\Support\PanelProviders;
 use Illuminate\Console\Scheduling\Schedule;
 use Spatie\LaravelPackageTools\Commands\InstallCommand;
@@ -48,6 +49,12 @@ class SharedSecretsServiceProvider extends PackageServiceProvider
                 // Spatie hides install commands from `artisan list`.
                 ->setHidden(false)
                 ->setDescription('Publish the migration and the config of Shared Secrets, run the migration and register the plugin in your panels'));
+    }
+
+    public function packageRegistered(): void
+    {
+        // Scoped, so a host's method is called once per request or queued job.
+        $this->app->scoped(Languages::HOSTS_BINDING, fn(): mixed => Languages::resolveHosts());
     }
 
     public function packageBooted(): void

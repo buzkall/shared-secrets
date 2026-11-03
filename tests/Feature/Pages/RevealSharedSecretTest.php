@@ -4,10 +4,12 @@ use Arzcode\SharedSecrets\Enums\SharedSecretEventType;
 use Arzcode\SharedSecrets\Enums\SharedSecretStatus;
 use Arzcode\SharedSecrets\Models\SharedSecret;
 use Arzcode\SharedSecrets\Pages\RevealSharedSecret;
+use Arzcode\SharedSecrets\Support\RecipientPanels;
 use Arzcode\SharedSecrets\Support\SecretUrl;
 use Arzcode\SharedSecrets\Tests\Fixtures\Language;
 use Arzcode\SharedSecrets\Tests\Fixtures\User;
 use Filament\Actions\Action;
+use Filament\Facades\Filament;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Lang;
 use Illuminate\Support\Facades\URL;
@@ -291,6 +293,30 @@ it('sends a guest to the login of a panel the recipient can access, remembering 
     'admin recipient'  => ['admin', '/admin/login'],
     'client recipient' => ['client', '/client/login'],
 ]);
+
+it('sends a guest to the login on the host of the secret language, so the intended link is in the same session', function(): void {
+    config()->set('shared-secrets.languages.source', Language::class);
+    config()->set('shared-secrets.languages.hosts', ['es' => 'example.es']);
+    $recipient = User::factory()->admin()->create();
+    $secret = SharedSecret::factory()->to($recipient)->inLocale('es')->withoutRetrievalStep()->create();
+    $url = (string)SecretUrl::for($secret);
+
+    expect(parse_url($url, PHP_URL_HOST))->toBe('example.es');
+
+    get($url)
+        ->assertRedirect('http://example.es/admin/login')
+        ->assertSessionHas('url.intended', $url);
+});
+
+it('keeps the login on the panel URL when that panel is bound to its own domain', function(): void {
+    $recipient = User::factory()->client()->create();
+
+    expect(parse_url((string)RecipientPanels::loginUrl($recipient, null, 'example.es'), PHP_URL_HOST))->toBe('example.es');
+
+    Filament::getPanel('client')->domains(['client.example.com']);
+
+    expect(parse_url((string)RecipientPanels::loginUrl($recipient, null, 'example.es'), PHP_URL_HOST))->not->toBe('example.es');
+});
 
 it('returns 403 to a logged-in user who is not the recipient', function(): void {
     $secret = SharedSecret::factory()->to(User::factory()->create())->withoutRetrievalStep()->create();

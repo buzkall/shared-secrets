@@ -75,13 +75,22 @@ return [
     | from its base language. Map it to the locale its missing strings come
     | from; unmapped locales keep the application's fallback locale.
     |
+    | When each language is served from its own domain, hosts maps a locale
+    | to its host (example.cat, or https://example.cat) and the link is built
+    | on it. A regional variant uses its fallback's host. Give it either the
+    | map or a static method returning it, as [App\Enums\Language::class,
+    | 'hosts'], called once per request. Null, a locale without a host, a
+    | value with a path, or a panel bound to its own domains keeps the
+    | application URL. Every host listed must serve the panel and its login.
+    |
     */
 
     'languages' => [
         'source'          => null,
         'value_attribute' => 'code',
         'label_attribute' => 'name',
-        'fallbacks'       => []
+        'fallbacks'       => [],
+        'hosts'           => null
     ],
 
     /*
