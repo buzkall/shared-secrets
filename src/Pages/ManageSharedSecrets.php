@@ -160,11 +160,20 @@ class ManageSharedSecrets extends Page implements HasTable
                             ->helperText(__('shared-secrets::shared-secrets.form.recipient.helper'))
                             ->placeholder(__('shared-secrets::shared-secrets.form.recipient.placeholder'))
                             ->searchable()
-                            ->options(fn(): array => Users::options(static::plugin()?->getRecipientQueryModifier()))
-                            ->getSearchResultsUsing(fn(string $search): array => Users::search(
-                                $search,
-                                static::plugin()?->getRecipientQueryModifier()
+                            ->options(fn(): array => Users::options(
+                                static::plugin()?->getRecipientQueryModifier(),
+                                labelUsing: static::recipientOptionLabel(...)
                             ))
+                            // The options are rendered with the page: opening the select must not fetch them again.
+                            ->dynamicOptions(false)
+                            // Every user already loaded is filtered in the browser, with no request per keystroke.
+                            ->getSearchResultsUsing(static::searchesRecipientsInDatabase()
+                                ? fn(string $search): array => Users::search(
+                                    $search,
+                                    static::plugin()?->getRecipientQueryModifier(),
+                                    labelUsing: static::recipientOptionLabel(...)
+                                )
+                                : null)
                             ->getOptionLabelUsing(fn(mixed $value): ?string => static::recipientLabel($value))
                             ->visible(fn(): bool => static::plugin()?->hasRecipients() ?? false)
                             // Shares its row with the language when there is one to pick.
@@ -460,7 +469,19 @@ class ManageSharedSecrets extends Page implements HasTable
     {
         $user = Users::find(Cast::key($value), static::plugin()?->getRecipientQueryModifier());
 
-        return $user instanceof Model ? Users::label($user) : null;
+        return $user instanceof Model ? static::recipientOptionLabel($user) : null;
+    }
+
+    protected static function searchesRecipientsInDatabase(): bool
+    {
+        $plugin = static::plugin();
+
+        return $plugin?->hasRecipients() === true && Users::exceedOptions($plugin->getRecipientQueryModifier());
+    }
+
+    protected static function recipientOptionLabel(Model $user): string
+    {
+        return static::plugin()?->getRecipientLabel($user) ?? Users::label($user);
     }
 
     /**

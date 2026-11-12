@@ -2,6 +2,21 @@
 
 All notable changes to `arzcode/shared-secrets` are documented here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.3.0] - 2026-11-12
+
+### Added
+
+- `->recipientLabel()` on the plugin sets how a user reads in the recipient select (its options, its search results and the selected user), to tell apart users who share a name, for instance by adding their surname or role: `->recipientLabel(fn (User $user) => "{$user->name} {$user->surname} · {$user->role->getLabel()}")`. The closure receives the user as `$user` or `$record`; without one, or when it returns a blank value, the select keeps the `user_title_attribute` from the config. The secrets table, the reader page and the notifications always use that attribute.
+
+### Fixed
+
+- The recipient select no longer sends a request each time it is opened: its options were fetched again from the server although they were already rendered with the page, which took seconds on a busy panel.
+- While every allowed recipient fits in the select's options (50, `Users::OPTIONS_LIMIT`), typing filters them in the browser instead of sending a request per keystroke. With more recipients than that, typing still searches the database on the `user_search_columns`.
+
+### Upgrading
+
+- Filtering in the browser only matches the label shown in the select. On sites with 50 recipients or fewer, typing a user's email or any other column from `user_search_columns` no longer finds them unless the label includes it; add it to `->recipientLabel()` if your users search by it.
+
 ## [1.2.0] - 2026-11-03
 
 ### Added

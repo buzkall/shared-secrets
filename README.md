@@ -80,6 +80,7 @@ SharedSecretsPlugin::make()
     ->viewAllSecrets(fn () => false)                 // list everyone's secrets instead of only your own
     ->recipients(true)                               // allow targeting a user of the site
     ->recipientQuery(fn ($query) => $query->where('active', true))
+    ->recipientLabel(fn (User $user) => "{$user->name} {$user->surname} · {$user->role->getLabel()}") // default: user_title_attribute
     ->revealPath('secret')                           // URL segment of the reader link, inside the panel path
     ->revealLogoHeight('6rem');                      // logo height on the reader page; null keeps the panel's
 ```

@@ -47,6 +47,9 @@ class AdminPanelProvider extends PanelProvider
                     ->viewAllSecrets(fn(): bool => (bool)config('testing.view_all', false))
                     ->recipients(fn(): bool => (bool)config('testing.recipients', true))
                     ->recipientQuery(fn($query) => $query->where('email', 'not like', '%@blocked.test'))
+                    ->recipientLabel(fn(User $user): ?string => config('testing.recipient_label')
+                        ? "{$user->name} ({$user->email})"
+                        : null)
             );
     }
 }

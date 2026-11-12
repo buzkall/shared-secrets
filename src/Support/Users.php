@@ -14,6 +14,11 @@ use LogicException;
 class Users
 {
     /**
+     * How many users the recipient select loads before anything is typed.
+     */
+    public const int OPTIONS_LIMIT = 50;
+
+    /**
      * @return class-string<Model>
      */
     public static function model(): string
@@ -44,19 +49,23 @@ class Users
      * The users offered before anything is typed.
      *
      * @param  (Closure(Builder<Model>): mixed)|null  $modifyQueryUsing
+     * @param  (Closure(Model): string)|null  $labelUsing
      * @return array<int|string, string>
      */
-    public static function options(?Closure $modifyQueryUsing = null, int $limit = 50): array
+    public static function options(?Closure $modifyQueryUsing = null, int $limit = self::OPTIONS_LIMIT, ?Closure $labelUsing = null): array
     {
-        return static::search(null, $modifyQueryUsing, $limit);
+        return static::search(null, $modifyQueryUsing, $limit, $labelUsing);
     }
 
     /**
      * @param  (Closure(Builder<Model>): mixed)|null  $modifyQueryUsing
+     * @param  (Closure(Model): string)|null  $labelUsing
      * @return array<int|string, string>
      */
-    public static function search(?string $search, ?Closure $modifyQueryUsing = null, int $limit = 50): array
+    public static function search(?string $search, ?Closure $modifyQueryUsing = null, int $limit = self::OPTIONS_LIMIT, ?Closure $labelUsing = null): array
     {
+        $labelUsing ??= static::label(...);
+
         $columns = static::searchColumns();
 
         return static::query($modifyQueryUsing)
@@ -68,8 +77,19 @@ class Users
             ->orderBy(static::titleAttribute())
             ->limit($limit)
             ->get()
-            ->mapWithKeys(fn(Model $user): array => [static::key($user) => static::label($user)])
+            ->mapWithKeys(fn(Model $user): array => [static::key($user) => $labelUsing($user)])
             ->all();
+    }
+
+    /**
+     * Whether some users are left out of the options, so typing has to search
+     * the database instead of filtering the loaded options in the browser.
+     *
+     * @param  (Closure(Builder<Model>): mixed)|null  $modifyQueryUsing
+     */
+    public static function exceedOptions(?Closure $modifyQueryUsing = null, int $limit = self::OPTIONS_LIMIT): bool
+    {
+        return static::query($modifyQueryUsing)->count() > $limit;
     }
 
     /**

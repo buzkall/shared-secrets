@@ -7,6 +7,7 @@ use Arzcode\SharedSecrets\Models\SharedSecret;
 use Arzcode\SharedSecrets\Notifications\SharedSecretNotification;
 use Arzcode\SharedSecrets\Pages\ManageSharedSecrets;
 use Arzcode\SharedSecrets\Support\SecretUrl;
+use Arzcode\SharedSecrets\Support\Users;
 use Arzcode\SharedSecrets\Tests\Fixtures\Language;
 use Arzcode\SharedSecrets\Tests\Fixtures\User;
 use Filament\Actions\DeleteAction;
@@ -258,6 +259,40 @@ it('offers the allowed users as recipients before anything is typed', function()
         'recipient_id',
         fn(Select $field): bool => $field->getOptions() === [$sender->id => 'Ada Sender', $allowed->id => 'Grace Allowed']
     );
+});
+
+it('labels the recipients as the plugin says, in the options and the selected one', function(): void {
+    config()->set('testing.recipient_label', true);
+    $sender = User::factory()->create(['name' => 'Ada', 'email' => 'ada@one.test']);
+    $namesake = User::factory()->create(['name' => 'Ada', 'email' => 'ada@two.test']);
+    actingAs($sender);
+
+    livewire(ManageSharedSecrets::class)
+        ->assertFormFieldExists('recipient_id', fn(Select $field): bool => $field->getOptions() === [
+            $sender->id   => 'Ada (ada@one.test)',
+            $namesake->id => 'Ada (ada@two.test)',
+        ])
+        ->fillForm(['recipient_id' => $namesake->id])
+        ->assertFormFieldExists('recipient_id', fn(Select $field): bool => $field->getOptionLabel() === 'Ada (ada@two.test)');
+});
+
+it('opens and searches the recipients in the browser while they all fit in the loaded options', function(): void {
+    actingAs(User::factory()->create());
+
+    livewire(ManageSharedSecrets::class)
+        ->assertFormFieldExists('recipient_id', fn(Select $field): bool => ! $field->hasDynamicOptions()
+            && ! $field->hasDynamicSearchResults());
+});
+
+it('searches the recipients in the database once there are more than the loaded options', function(): void {
+    config()->set('testing.recipient_label', true);
+    User::factory()->count(Users::OPTIONS_LIMIT)->create();
+    $wanted = User::factory()->create(['name' => 'Ada', 'email' => 'ada@wanted.test']);
+    actingAs($wanted);
+
+    livewire(ManageSharedSecrets::class)
+        ->assertFormFieldExists('recipient_id', fn(Select $field): bool => $field->hasDynamicSearchResults()
+            && $field->getSearchResults('wanted') === [$wanted->id => 'Ada (ada@wanted.test)']);
 });
 
 it('rejects a recipient outside the query allowed by the plugin', function(): void {

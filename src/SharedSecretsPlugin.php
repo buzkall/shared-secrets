@@ -6,6 +6,7 @@ use Arzcode\SharedSecrets\Http\Middleware\ProtectRevealResponse;
 use Arzcode\SharedSecrets\Pages\ManageSharedSecrets;
 use Arzcode\SharedSecrets\Pages\RevealSharedSecret;
 use Arzcode\SharedSecrets\Support\SecretUrl;
+use Arzcode\SharedSecrets\Support\Users;
 use BackedEnum;
 use Closure;
 use Filament\Contracts\Plugin;
@@ -15,6 +16,7 @@ use Filament\Support\Concerns\EvaluatesClosures;
 use Filament\Support\Icons\Heroicon;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Contracts\Support\Htmlable;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Route;
 use LogicException;
 use UnitEnum;
@@ -29,6 +31,7 @@ class SharedSecretsPlugin implements Plugin
     protected bool|Closure $canViewAllSecrets = false;
     protected bool|Closure $hasRecipients = true;
     protected ?Closure $modifyRecipientQueryUsing = null;
+    protected ?Closure $recipientLabelUsing = null;
     protected string $revealPath = 'secret';
     protected ?string $revealLogoHeight = '6rem';
     protected string|UnitEnum|Closure|null $navigationGroup = null;
@@ -159,6 +162,29 @@ class SharedSecretsPlugin implements Plugin
     public function getRecipientQueryModifier(): ?Closure
     {
         return $this->modifyRecipientQueryUsing;
+    }
+
+    /**
+     * How a user reads in the recipient select, to tell apart users who share
+     * a name. Receives the user as $user or $record. Defaults to the
+     * user_title_attribute in the config.
+     */
+    public function recipientLabel(?Closure $callback): static
+    {
+        $this->recipientLabelUsing = $callback;
+
+        return $this;
+    }
+
+    public function getRecipientLabel(Model $user): string
+    {
+        if (! $this->recipientLabelUsing instanceof Closure) {
+            return Users::label($user);
+        }
+
+        $label = $this->evaluate($this->recipientLabelUsing, ['user' => $user, 'record' => $user], [Model::class => $user]);
+
+        return is_scalar($label) && filled($label) ? (string)$label : Users::label($user);
     }
 
     /**
